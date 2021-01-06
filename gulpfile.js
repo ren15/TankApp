@@ -1,8 +1,7 @@
-const project_folder = 'dist'
+const project_folder = 'build'
 const source_folder = 'src'
 
 const fs = require('fs')
-const babel = require('gulp-babel')
 
 const path = {
   build: {
@@ -95,11 +94,6 @@ function css() {
 function js() {
   return src(path.src.js)
     .pipe(fileinclude())
-    .pipe(
-      babel({
-        presets: ['@babel/env']
-      })
-    )
     .pipe(dest(path.build.js))
     .pipe(uglify())
     .pipe(
@@ -138,32 +132,38 @@ function fonts() {
 }
 
 gulp.task('svgSprite', function () {
-  return gulp
-    .src([source_folder + '/iconsprite/*.svg'])
-    .pipe(
-      svgSprite({
-        mode: {
-          stack: {
-            sprite: '../icons/icons.svg',
-            example: true
+  return new Promise(function (resolve, reject) {
+    gulp
+      .src([source_folder + '/iconsprite/*.svg'])
+      .pipe(
+        svgSprite({
+          mode: {
+            stack: {
+              sprite: '../icons/icons.svg',
+              example: true
+            }
           }
-        }
-      })
-    )
-    .pipe(dest(path.build.img))
+        })
+      )
+      .pipe(dest(path.build.img))
+    resolve()
+  })
 })
 
 gulp.task('fonter', function () {
-  return src([source_folder + '/fonts/*.otf'])
-    .pipe(
-      fonter({
-        formats: ['ttf']
-      })
-    )
-    .pipe(dest(source_folder + '/fonts/'))
+  return new Promise(function (resolve, reject) {
+    src([source_folder + '/fonts/*.otf'])
+      .pipe(
+        fonter({
+          formats: ['ttf']
+        })
+      )
+      .pipe(dest(source_folder + '/fonts/'))
+    resolve()
+  })
 })
 
-function fontsStyle(params) {
+function fontsStyle(done) {
   let file_content = fs.readFileSync(source_folder + '/scss/fonts.scss')
   if (file_content == '') {
     fs.writeFile(source_folder + '/scss/fonts.scss', '', cb)
@@ -189,9 +189,8 @@ function fontsStyle(params) {
       }
     })
   }
+  done()
 }
-
-function cb() {}
 
 function watchFiles(params) {
   gulp.watch([path.watch.html], html),
